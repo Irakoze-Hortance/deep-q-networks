@@ -2,6 +2,7 @@ import gymnasium as gym
 import ale_py
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from stable_baselines3 import DQN
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.callbacks import BaseCallback
@@ -29,16 +30,16 @@ class RewardLogger(BaseCallback):
 # Hyperparameter Experiments
 # -----------------------------
 experiments = [
-    #{"lr": 0.001, "gamma": 0.95, "batch_size": 32},
+    {"lr": 0.001, "gamma": 0.95, "batch_size": 32},
     {"lr": 0.001, "gamma": 0.99, "batch_size": 32},
     {"lr": 0.0005, "gamma": 0.95, "batch_size": 32},
-    {"lr": 0.0005, "gamma": 0.99, "batch_size": 32},
-    {"lr": 0.0001, "gamma": 0.95, "batch_size": 32},
-    {"lr": 0.0001, "gamma": 0.99, "batch_size": 32},
     {"lr": 0.0005, "gamma": 0.97, "batch_size": 64},
     {"lr": 0.0003, "gamma": 0.98, "batch_size": 64},
     {"lr": 0.0002, "gamma": 0.99, "batch_size": 64},
     {"lr": 0.0001, "gamma": 0.98, "batch_size": 128},
+    {"lr": 0.0005, "gamma": 0.99, "batch_size": 32},
+    {"lr": 0.0001, "gamma": 0.95, "batch_size": 32},
+    {"lr": 0.0001, "gamma": 0.99, "batch_size": 32},
 ]
 
 # -----------------------------
@@ -74,8 +75,12 @@ for i, params in enumerate(experiments):
     # Train the agent
     model.learn(total_timesteps=50000, callback=logger)
 
-    # Save model
-    model.save(f"dqn_model_exp_{i+1}")
+    # Save model unless it already exists.
+    model_path = Path(f"dqn_model_exp_{i+1}.zip")
+    if model_path.exists():
+        print(f"Skipping save for Experiment {i+1}: {model_path} already exists")
+    else:
+        model.save(str(model_path))
 
     # Collect results
     avg_reward = np.mean(logger.episode_rewards) if logger.episode_rewards else 0
