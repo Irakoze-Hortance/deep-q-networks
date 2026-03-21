@@ -22,7 +22,7 @@ EVAL_EPISODES = 10
 
 def make_env(seed: int):
     """Create and wrap the Atari environment. CnnPolicy is always used, so
-    FlattenObservation is not applied -- the CNN handles raw stacked frames."""
+    FlattenObservation is not applied, the CNN handles raw stacked frames."""
     env = gym.make(ENV_ID)
     env = AtariWrapper(env)
     env = Monitor(env)
@@ -33,9 +33,9 @@ def make_env(seed: int):
 
 def run_sanity_check():
     """Run a random agent for a fixed number of steps and print per-episode
-    rewards. If nothing prints, episodes are not terminating -- a sign that
+    rewards. If nothing prints, episodes are not terminating, it is a sign that
     something is wrong with the environment or wrapper stack."""
-    print("\n--- Sanity Check: Random Agent ---")
+    print("\n Sanity Check: Random Agent")
     env = make_env(seed=0)
     obs, _ = env.reset()
     episodes_seen = 0
@@ -86,6 +86,12 @@ def parse_args():
         default=".",
         help="Directory where models and results are saved.",
     )
+    parser.add_argument(
+        "--start-from",
+        type=int,
+        default=1,
+        help="Experiment number to start from (1-indexed). Use this to resume after adding new rows to the CSV.",
+    )
     return parser.parse_args()
 
 
@@ -121,14 +127,30 @@ def load_experiments(experiments_file: Path):
     return experiments
 
 
-def train_experiments(experiments, output_dir: Path):
+def train_experiments(experiments, output_dir: Path, start_from: int = 1):
     output_dir.mkdir(parents=True, exist_ok=True)
-    results = []
-    best_result = None
     best_model_path = output_dir / "dqn_model.zip"
 
+    # Load existing results if resuming, so the final CSV stays complete
+    results_path = output_dir / "training_results.csv"
+    if start_from > 1 and results_path.exists():
+        existing_df = pd.read_csv(results_path)
+        results = existing_df.to_dict(orient="records")
+        print(f"Resuming from experiment {start_from}. Loaded {len(results)} existing result(s).")
+    else:
+        results = []
+
+    # Determine best result so far from already-completed experiments
+    best_result = None
+    for row in results:
+        if best_result is None or row["Eval Mean Reward"] > best_result["Eval Mean Reward"]:
+            best_result = dict(row)
+
     for i, params in enumerate(experiments, start=1):
-        print(f"\nStarting Experiment {i}")
+        if i < start_from:
+            continue
+
+        print(f"\n Experiment {i}")
         print(params)
 
         env = make_env(seed=SEED + i)
@@ -146,6 +168,7 @@ def train_experiments(experiments, output_dir: Path):
             exploration_fraction=params["epsilon_decay"],
             seed=SEED + i,
             verbose=1,
+            device="cuda",
         )
 
         model.learn(total_timesteps=TRAIN_TIMESTEPS, callback=logger)
@@ -222,4 +245,5 @@ if __name__ == "__main__":
     train_experiments(
         experiments=selected_experiments,
         output_dir=Path(args.output_dir),
+        start_from=args.start_from,
     )
