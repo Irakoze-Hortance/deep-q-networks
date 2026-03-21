@@ -6,7 +6,6 @@ import ale_py
 import gymnasium as gym
 import numpy as np
 import pandas as pd
-from gymnasium.wrappers import FlattenObservation
 from stable_baselines3 import DQN
 from stable_baselines3.common.atari_wrappers import AtariWrapper
 from stable_baselines3.common.callbacks import BaseCallback
@@ -15,34 +14,63 @@ from stable_baselines3.common.monitor import Monitor
 
 gym.register_envs(ale_py)
 
-ENV_ID = "ALE/Adventure-v5"
+ENV_ID = "ALE/Pong-v5"
 SEED = 42
-TRAIN_TIMESTEPS = 50_000
+TRAIN_TIMESTEPS = 200_000
 EVAL_EPISODES = 10
 
 
-def make_env(policy_name: str, seed: int):
+def make_env(seed: int):
+    """Create and wrap the Atari environment. CnnPolicy is always used, so
+    FlattenObservation is not applied -- the CNN handles raw stacked frames."""
     env = gym.make(ENV_ID)
     env = AtariWrapper(env)
-    if policy_name == "MlpPolicy":
-        env = FlattenObservation(env)
     env = Monitor(env)
     env.reset(seed=seed)
     env.action_space.seed(seed)
     return env
 
 
+def run_sanity_check():
+    """Run a random agent for a fixed number of steps and print per-episode
+    rewards. If nothing prints, episodes are not terminating -- a sign that
+    something is wrong with the environment or wrapper stack."""
+    print("\n--- Sanity Check: Random Agent ---")
+    env = make_env(seed=0)
+    obs, _ = env.reset()
+    episodes_seen = 0
+    for _ in range(2_000):
+        action = env.action_space.sample()
+        obs, _, terminated, truncated, info = env.step(action)
+        if terminated or truncated:
+            reward = info.get("episode", {}).get("r", None)
+            print(f"  Random episode {episodes_seen + 1} reward: {reward}")
+            episodes_seen += 1
+            obs, _ = env.reset()
+    env.close()
+    if episodes_seen == 0:
+        raise RuntimeError(
+            "Sanity check failed: no episodes completed in 2,000 steps. "
+            "Check your environment and wrapper configuration."
+        )
+    print(f"  Sanity check passed ({episodes_seen} episodes completed).\n")
+
+
 class RewardLogger(BaseCallback):
+    """Log true (unclipped) per-episode rewards and lengths via the Monitor
+    info dict. AtariWrapper clips rewards during training, but Monitor records
+    the original game score in info['episode']['r'], so we read from there."""
+
     def __init__(self):
         super().__init__()
         self.episode_rewards = []
         self.episode_lengths = []
 
     def _on_step(self) -> bool:
-        infos = self.locals.get("infos", [])
-        if infos and "episode" in infos[0]:
-            self.episode_rewards.append(infos[0]["episode"]["r"])
-            self.episode_lengths.append(infos[0]["episode"]["l"])
+        for info in self.locals.get("infos", []):
+            if "episode" in info:
+                self.episode_rewards.append(info["episode"]["r"])
+                self.episode_lengths.append(info["episode"]["l"])
         return True
 
 
@@ -51,25 +79,18 @@ def parse_args():
     parser.add_argument(
         "--experiments-file",
         required=True,
-        help="CSV file with experiment rows (policy, lr, gamma, batch_size, epsilon_start, epsilon_end, epsilon_decay).",
+        help="CSV file with experiment rows (lr, gamma, batch_size, epsilon_start, epsilon_end, epsilon_decay).",
     )
     parser.add_argument(
         "--output-dir",
         default=".",
-        help="Directory where models/results are saved.",
-    )
-    parser.add_argument(
-        "--timesteps",
-        type=int,
-        default=TRAIN_TIMESTEPS,
-        help="Total training timesteps per experiment.",
+        help="Directory where models and results are saved.",
     )
     return parser.parse_args()
 
 
 def load_experiments(experiments_file: Path):
     required_columns = [
-        "policy",
         "lr",
         "gamma",
         "batch_size",
@@ -90,11 +111,6 @@ def load_experiments(experiments_file: Path):
         raise ValueError("Experiments file contains no rows.")
 
     for i, exp in enumerate(experiments, start=1):
-        if exp["policy"] not in {"MlpPolicy", "CnnPolicy"}:
-            raise ValueError(
-                f"Invalid policy in row {i}: {exp['policy']}. Use MlpPolicy or CnnPolicy."
-            )
-
         exp["lr"] = float(exp["lr"])
         exp["gamma"] = float(exp["gamma"])
         exp["batch_size"] = int(exp["batch_size"])
@@ -105,7 +121,7 @@ def load_experiments(experiments_file: Path):
     return experiments
 
 
-def train_experiments(experiments, output_dir: Path, timesteps: int):
+def train_experiments(experiments, output_dir: Path):
     output_dir.mkdir(parents=True, exist_ok=True)
     results = []
     best_result = None
@@ -115,11 +131,11 @@ def train_experiments(experiments, output_dir: Path, timesteps: int):
         print(f"\nStarting Experiment {i}")
         print(params)
 
-        env = make_env(policy_name=params["policy"], seed=SEED + i)
+        env = make_env(seed=SEED + i)
         logger = RewardLogger()
 
         model = DQN(
-            policy=params["policy"],
+            policy="CnnPolicy",
             env=env,
             learning_rate=params["lr"],
             gamma=params["gamma"],
@@ -132,9 +148,9 @@ def train_experiments(experiments, output_dir: Path, timesteps: int):
             verbose=1,
         )
 
-        model.learn(total_timesteps=timesteps, callback=logger)
+        model.learn(total_timesteps=TRAIN_TIMESTEPS, callback=logger)
 
-        eval_env = make_env(policy_name=params["policy"], seed=SEED + 1000 + i)
+        eval_env = make_env(seed=SEED + 1000 + i)
         eval_mean_reward, eval_std_reward = evaluate_policy(
             model,
             eval_env,
@@ -150,18 +166,20 @@ def train_experiments(experiments, output_dir: Path, timesteps: int):
         avg_training_reward = (
             float(np.mean(logger.episode_rewards)) if logger.episode_rewards else 0.0
         )
-        avg_length = float(np.mean(logger.episode_lengths)) if logger.episode_lengths else 0.0
+        avg_length = (
+            float(np.mean(logger.episode_lengths)) if logger.episode_lengths else 0.0
+        )
 
         result_row = {
             "Experiment": i,
-            "Policy": params["policy"],
+            "Policy": "CnnPolicy",
             "Learning Rate": params["lr"],
             "Gamma": params["gamma"],
             "Batch Size": params["batch_size"],
             "Epsilon Start": params["epsilon_start"],
             "Epsilon End": params["epsilon_end"],
             "Epsilon Decay": params["epsilon_decay"],
-            "Avg Train Reward": avg_training_reward,
+            "Avg Train Reward (true)": avg_training_reward,
             "Avg Episode Length": avg_length,
             "Eval Mean Reward": float(eval_mean_reward),
             "Eval Std Reward": float(eval_std_reward),
@@ -173,7 +191,7 @@ def train_experiments(experiments, output_dir: Path, timesteps: int):
             best_result = dict(result_row)
             shutil.copy2(model_path, best_model_path)
             print(
-                f"New best model: Experiment {i} ({params['policy']}) "
+                f"New best model: Experiment {i} (CnnPolicy) "
                 f"with eval mean reward {eval_mean_reward:.3f}"
             )
 
@@ -199,10 +217,9 @@ def train_experiments(experiments, output_dir: Path, timesteps: int):
 
 if __name__ == "__main__":
     args = parse_args()
+    run_sanity_check()
     selected_experiments = load_experiments(Path(args.experiments_file))
-
     train_experiments(
         experiments=selected_experiments,
         output_dir=Path(args.output_dir),
-        timesteps=args.timesteps,
     )
