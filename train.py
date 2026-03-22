@@ -6,6 +6,8 @@ import ale_py
 import gymnasium as gym
 import numpy as np
 import pandas as pd
+import torch
+from gymnasium.wrappers import FlattenObservation
 from stable_baselines3 import DQN
 from stable_baselines3.common.atari_wrappers import AtariWrapper
 from stable_baselines3.common.callbacks import BaseCallback
@@ -16,15 +18,21 @@ gym.register_envs(ale_py)
 
 ENV_ID = "ALE/Pong-v5"
 SEED = 42
-TRAIN_TIMESTEPS = 50_000
+TRAIN_TIMESTEPS = 500_000
 EVAL_EPISODES = 10
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"Training device: {DEVICE}")
 
 
-def make_env(seed: int):
-    """Create and wrap the Atari environment. CnnPolicy is always used, so
-    FlattenObservation is not applied, the CNN handles raw stacked frames."""
+def make_env(policy: str, seed: int):
+    """Create and wrap the Atari environment.
+    MlpPolicy requires a flat observation vector, so FlattenObservation is
+    applied on top of AtariWrapper. CnnPolicy operates directly on the stacked
+    frames produced by AtariWrapper."""
     env = gym.make(ENV_ID)
     env = AtariWrapper(env)
+    if policy == "MlpPolicy":
+        env = FlattenObservation(env)
     env = Monitor(env)
     env.reset(seed=seed)
     env.action_space.seed(seed)
@@ -33,10 +41,10 @@ def make_env(seed: int):
 
 def run_sanity_check():
     """Run a random agent for a fixed number of steps and print per-episode
-    rewards. If nothing prints, episodes are not terminating, it is a sign that
-    something is wrong with the environment or wrapper stack."""
-    print("\n Sanity Check: Random Agent")
-    env = make_env(seed=0)
+    rewards. If nothing prints, episodes are not terminating, which is a sign
+    that something is wrong with the environment or wrapper stack."""
+    print("\nSanity Check: Random Agent")
+    env = make_env(policy="CnnPolicy", seed=0)
     obs, _ = env.reset()
     episodes_seen = 0
     for _ in range(2_000):
@@ -79,7 +87,7 @@ def parse_args():
     parser.add_argument(
         "--experiments-file",
         required=True,
-        help="CSV file with experiment rows (lr, gamma, batch_size, epsilon_start, epsilon_end, epsilon_decay).",
+        help="CSV file with experiment rows (policy, lr, gamma, batch_size, epsilon_start, epsilon_end, epsilon_decay).",
     )
     parser.add_argument(
         "--output-dir",
@@ -97,6 +105,7 @@ def parse_args():
 
 def load_experiments(experiments_file: Path):
     required_columns = [
+        "policy",
         "lr",
         "gamma",
         "batch_size",
@@ -117,6 +126,10 @@ def load_experiments(experiments_file: Path):
         raise ValueError("Experiments file contains no rows.")
 
     for i, exp in enumerate(experiments, start=1):
+        if exp["policy"] not in {"MlpPolicy", "CnnPolicy"}:
+            raise ValueError(
+                f"Invalid policy in row {i}: {exp['policy']}. Use MlpPolicy or CnnPolicy."
+            )
         exp["lr"] = float(exp["lr"])
         exp["gamma"] = float(exp["gamma"])
         exp["batch_size"] = int(exp["batch_size"])
@@ -150,30 +163,30 @@ def train_experiments(experiments, output_dir: Path, start_from: int = 1):
         if i < start_from:
             continue
 
-        print(f"\n Experiment {i}")
+        print(f"\nStarting Experiment {i}")
         print(params)
 
-        env = make_env(seed=SEED + i)
+        env = make_env(policy=params["policy"], seed=SEED + i)
         logger = RewardLogger()
 
         model = DQN(
-            policy="CnnPolicy",
+            policy=params["policy"],
             env=env,
             learning_rate=params["lr"],
             gamma=params["gamma"],
             batch_size=params["batch_size"],
-            buffer_size=50_000,
+            buffer_size=100_000,
             exploration_initial_eps=params["epsilon_start"],
             exploration_final_eps=params["epsilon_end"],
             exploration_fraction=params["epsilon_decay"],
             seed=SEED + i,
             verbose=1,
-            device="cuda",
+            device=DEVICE,
         )
 
         model.learn(total_timesteps=TRAIN_TIMESTEPS, callback=logger)
 
-        eval_env = make_env(seed=SEED + 1000 + i)
+        eval_env = make_env(policy=params["policy"], seed=SEED + 1000 + i)
         eval_mean_reward, eval_std_reward = evaluate_policy(
             model,
             eval_env,
@@ -195,7 +208,7 @@ def train_experiments(experiments, output_dir: Path, start_from: int = 1):
 
         result_row = {
             "Experiment": i,
-            "Policy": "CnnPolicy",
+            "Policy": params["policy"],
             "Learning Rate": params["lr"],
             "Gamma": params["gamma"],
             "Batch Size": params["batch_size"],
@@ -214,7 +227,7 @@ def train_experiments(experiments, output_dir: Path, start_from: int = 1):
             best_result = dict(result_row)
             shutil.copy2(model_path, best_model_path)
             print(
-                f"New best model: Experiment {i} (CnnPolicy) "
+                f"New best model: Experiment {i} ({params['policy']}) "
                 f"with eval mean reward {eval_mean_reward:.3f}"
             )
 
@@ -235,7 +248,7 @@ def train_experiments(experiments, output_dir: Path, start_from: int = 1):
         print(f"Best model saved to: {best_model_path}")
 
     print("\nTraining Complete")
-    print(df)
+    print(df.to_string())
 
 
 if __name__ == "__main__":
