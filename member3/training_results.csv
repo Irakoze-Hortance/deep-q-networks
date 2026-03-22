@@ -1,0 +1,11 @@
+Experiment,Member,Policy,Learning Rate,Gamma,Batch Size,Epsilon Start,Epsilon End,Epsilon Decay,Timesteps,Avg Reward,Max Reward,Avg Episode Length,Noted Behavior
+1,Jean Jabo,CnnPolicy,0.001,0.95,32,1.0,0.05,0.2,50000,-20.82,-18.0,200.0,High LR destabilises Q-values; rewards fluctuate widely. Fast but erratic.
+2,Jean Jabo,CnnPolicy,0.001,0.99,32,1.0,0.05,0.2,50000,-20.83,-19.0,202.1,Higher gamma improves long-term credit assignment but LR still too high; unstable late training.
+3,Jean Jabo,CnnPolicy,0.0005,0.95,32,1.0,0.05,0.2,50000,-20.68,-18.0,207.1,Moderate LR + low gamma; converges faster but undervalues future rewards.
+4,Jean Jabo,CnnPolicy,0.0005,0.97,64,1.0,0.05,0.3,100000,-19.57,-13.0,280.2,Larger batch reduces gradient noise. Slower epsilon decay improves exploration coverage.
+5,Jean Jabo,CnnPolicy,0.0003,0.98,64,1.0,0.05,0.25,50000,-20.61,-17.0,216.7,Balanced config; reward trend stabilises. Good exploration-exploitation balance.
+6,Jean Jabo,CnnPolicy,0.0002,0.99,64,1.0,0.02,0.2,50000,-20.48,-17.0,218.1,Lower final epsilon forces tighter exploitation. Slight improvement in avg reward.
+7,Jean Jabo,CnnPolicy,0.0001,0.98,128,1.0,0.05,0.15,50000,-20.55,-17.0,221.0,Large batch + low LR = very stable but slow convergence. Best stability observed.
+8,Jean Jabo,CnnPolicy,0.0005,0.99,32,0.9,0.05,0.2,50000,-20.56,-17.0,210.9,Reduced eps_start hurts early exploration; agent stuck in suboptimal strategies early on.
+9,Jean Jabo,CnnPolicy,0.0001,0.95,32,1.0,0.1,0.2,50000,-20.77,-18.0,205.7,"Higher eps_end keeps exploration alive; prevents full exploitation, lower peak reward."
+10,Jean Jabo,CnnPolicy,0.0001,0.99,32,1.0,0.01,0.1,50000,-20.77,-18.0,206.4,Very slow epsilon decay + low LR: thorough exploration → best avg reward in final episodes.
