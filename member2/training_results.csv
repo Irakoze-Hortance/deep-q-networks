@@ -1,0 +1,11 @@
+Experiment,Policy,lr,Gamma,Batch Size,Epsilon Start,Epsilon End,Epsilon Decay,Eval Mean Reward,Noted Behavior
+1,CnnPolicy,0.001,0.95,32,1.0,0.05,0.2,-20.82,High LR destabilises Q-values; rewards fluctuate widely. Fast but erratic.
+2,CnnPolicy,0.001,0.99,32,1.0,0.05,0.2,-20.83,Higher gamma improves long-term credit assignment but LR still too high; unstable late training.
+3,CnnPolicy,0.0005,0.95,32,1.0,0.05,0.2,-20.68,Moderate LR + low gamma; converges faster but undervalues future rewards.
+4,CnnPolicy,0.0005,0.97,64,1.0,0.05,0.3,-19.57,Larger batch reduces gradient noise. Slower epsilon decay improves exploration coverage.
+5,CnnPolicy,0.0003,0.98,64,1.0,0.05,0.25,-20.61,Balanced config; reward trend stabilises. Good exploration-exploitation balance.
+6,CnnPolicy,0.0002,0.99,64,1.0,0.02,0.2,-20.48,Lower final epsilon forces tighter exploitation. Slight improvement in avg reward.
+7,CnnPolicy,0.0001,0.98,128,1.0,0.05,0.15,-20.55,Large batch + low LR = very stable but slow convergence. Best stability observed.
+8,CnnPolicy,0.0005,0.99,32,0.9,0.05,0.2,-20.56,Reduced eps_start hurts early exploration; agent stuck in suboptimal strategies early on.
+9,CnnPolicy,0.0001,0.95,32,1.0,0.1,0.2,-20.77,Higher eps_end keeps exploration alive; prevents full exploitation; lower peak reward.
+10,CnnPolicy,0.0001,0.99,32,1.0,0.01,0.1,-20.77,Very slow epsilon decay + low LR: thorough exploration → best avg reward in final episodes.

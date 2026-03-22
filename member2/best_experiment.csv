@@ -1,0 +1,2 @@
+Experiment,Policy,Learning Rate,Gamma,Batch Size,Epsilon Start,Epsilon End,Epsilon Decay,Avg Train Reward,Avg Episode Length,Eval Mean Reward,Eval Std Reward,Eval Episodes
+1,CnnPolicy,0.001,0.95,32,1.0,0.05,0.2,-20.82
