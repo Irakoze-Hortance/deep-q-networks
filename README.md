@@ -159,7 +159,7 @@ Each group member independently ran 10 experiments varying the learning rate, ga
 | 1 | CnnPolicy | 0.001 | 0.95 | 32 | 1.0 | 0.05 | 0.2 | -20.82 | High LR destabilises Q-values; rewards fluctuate widely. Fast but erratic. |
 | 2 | CnnPolicy | 0.001 | 0.99 | 32 | 1.0 | 0.05 | 0.2 | -20.83 | Higher gamma improves long-term credit assignment but LR still too high; unstable late training. |
 | 3 | CnnPolicy | 0.0005 | 0.95 | 32 | 1.0 | 0.05 | 0.2 | -20.68 | Moderate LR + low gamma; converges faster but undervalues future rewards. |
-| 4 | CnnPolicy | 0.0005 | 0.97 | 64 | 1.0 | 0.05 | 0.3 | -19.57 | Larger batch reduces gradient noise. Slower epsilon decay improves exploration coverage. |
+| 4 | CnnPolicy | 0.0005 | 0.97 | 64 | 1.0 | 0.05 | 0.3 | -19.57 | Best Result. Larger batch reduces gradient noise. Slower epsilon decay improves exploration coverage. |
 | 5 | CnnPolicy | 0.0003 | 0.98 | 64 | 1.0 | 0.05 | 0.25 | -20.61 | Balanced config; reward trend stabilises. Good exploration-exploitation balance. |
 | 6 | CnnPolicy | 0.0002 | 0.99 | 64 | 1.0 | 0.02 | 0.2 | -20.48 | Lower final epsilon forces tighter exploitation. Slight improvement in avg reward. |
 | 7 | MlpPolicy | 0.0001 | 0.98 | 128 | 1.0 | 0.05 | 0.15 | -20.55 | Large batch + low LR = very stable but slow convergence. Best stability observed. |
