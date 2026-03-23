@@ -123,18 +123,18 @@ Each group member independently ran 10 experiments varying the learning rate, ga
 
 ### Member 1: Hortance Irakoze
 
-| experiment | policy | lr | gamma | batch_size | epsilon_start | epsilon_end | epsilon_decay |
-|---|---|---|---|---|---|---|---|
-| 1 | CnnPolicy | 0.001 | 0.95 | 32 | 1.0 | 0.10 | 0.20 |
-| 2 | CnnPolicy | 0.001 | 0.99 | 32 | 1.0 | 0.10 | 0.20 |
-| 3 | CnnPolicy | 0.0005 | 0.95 | 32 | 1.0 | 0.10 | 0.20 |
-| 4 | CnnPolicy | 0.0005 | 0.97 | 64 | 1.0 | 0.10 | 0.20 |
-| 5 | CnnPolicy | 0.0003 | 0.98 | 64 | 1.0 | 0.10 | 0.20 |
-| 6 | CnnPolicy | 0.0002 | 0.99 | 64 | 1.0 | 0.10 | 0.20 |
-| 7 | CnnPolicy | 0.0001 | 0.98 | 128 | 1.0 | 0.10 | 0.20 |
-| 8 | CnnPolicy | 0.0005 | 0.99 | 32 | 1.0 | 0.10 | 0.20 |
-| 9 | CnnPolicy | 0.0001 | 0.95 | 32 | 1.0 | 0.10 | 0.20 |
-| 10 | CnnPolicy | 0.0001 | 0.99 | 32 | 1.0 | 0.10 | 0.20 |
+| Experiment | Policy | lr | Gamma | Batch Size | Epsilon Start | Epsilon End | Epsilon Decay | Eval Std Reward | Is Best |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | CnnPolicy | 0.001 | 0.95 | 32 | 1.0 | 0.10 | 0.20 | 0.000000 | False |
+| 2 | CnnPolicy | 0.001 | 0.99 | 32 | 1.0 | 0.10 | 0.20 | 0.000000 | False |
+| 3 | CnnPolicy | 0.0005 | 0.95 | 32 | 1.0 | 0.10 | 0.20 | 0.663325 | False |
+| 4 | CnnPolicy | 0.0005 | 0.97 | 64 | 1.0 | 0.10 | 0.20 | 1.813836 | False |
+| 5 | CnnPolicy | 0.0003 | 0.98 | 64 | 1.0 | 0.10 | 0.20 | 1.374773 | False |
+| 6 | CnnPolicy | 0.0002 | 0.99 | 64 | 1.0 | 0.10 | 0.20 | 1.688194 | True |
+| 7 | CnnPolicy | 0.0001 | 0.98 | 128 | 1.0 | 0.10 | 0.20 | 2.118962 | False |
+| 8 | CnnPolicy | 0.0005 | 0.99 | 32 | 1.0 | 0.10 | 0.20 | 1.833030 | False |
+| 9 | CnnPolicy | 0.0001 | 0.95 | 32 | 1.0 | 0.10 | 0.20 | 0.979796 | False |
+| 10 | CnnPolicy | 0.0001 | 0.99 | 32 | 1.0 | 0.10 | 0.20 | 0.900000 | False |
 
 ### Member 2: Idara Essien
 
