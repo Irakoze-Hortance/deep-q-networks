@@ -1,11 +1,11 @@
-Experiment,Policy,lr,Gamma,Batch Size,Epsilon Start,Epsilon End,Epsilon Decay,Eval Mean Reward,Noted Behavior
-1,CnnPolicy,0.001,0.95,32,1.0,0.05,0.2,-20.82,High LR destabilises Q-values; rewards fluctuate widely. Fast but erratic.
-2,CnnPolicy,0.001,0.99,32,1.0,0.05,0.2,-20.83,Higher gamma improves long-term credit assignment but LR still too high; unstable late training.
-3,CnnPolicy,0.0005,0.95,32,1.0,0.05,0.2,-20.68,Moderate LR + low gamma; converges faster but undervalues future rewards.
-4,CnnPolicy,0.0005,0.97,64,1.0,0.05,0.3,-19.57,Larger batch reduces gradient noise. Slower epsilon decay improves exploration coverage.
-5,CnnPolicy,0.0003,0.98,64,1.0,0.05,0.25,-20.61,Balanced config; reward trend stabilises. Good exploration-exploitation balance.
-6,CnnPolicy,0.0002,0.99,64,1.0,0.02,0.2,-20.48,Lower final epsilon forces tighter exploitation. Slight improvement in avg reward.
-7,CnnPolicy,0.0001,0.98,128,1.0,0.05,0.15,-20.55,Large batch + low LR = very stable but slow convergence. Best stability observed.
-8,CnnPolicy,0.0005,0.99,32,0.9,0.05,0.2,-20.56,Reduced eps_start hurts early exploration; agent stuck in suboptimal strategies early on.
-9,CnnPolicy,0.0001,0.95,32,1.0,0.1,0.2,-20.77,Higher eps_end keeps exploration alive; prevents full exploitation; lower peak reward.
-10,CnnPolicy,0.0001,0.99,32,1.0,0.01,0.1,-20.77,Very slow epsilon decay + low LR: thorough exploration → best avg reward in final episodes.
+Experiment,Policy,Learning Rate,Gamma,Batch Size,Epsilon Start,Epsilon End,Epsilon Decay,Avg Train Reward (true),Avg Episode Length,Eval Mean Reward,Eval Std Reward,Eval Episodes,Is Best
+1,CnnPolicy,0.0003,0.99,64,1.0,0.05,0.2,-15.21301775147929,492.90039447731755,-2.1,7.608547824650903,10,True
+2,CnnPolicy,0.0005,0.99,64,1.0,0.05,0.2,-15.697601668404587,521.2867570385819,-6.9,3.176476034853718,10,False
+3,CnnPolicy,0.0001,0.99,64,1.0,0.05,0.2,-16.180035650623886,444.9536541889483,-10.5,3.0083217912982647,10,False
+4,CnnPolicy,0.0005,0.99,128,1.0,0.05,0.2,-15.627329192546584,517.2805383022775,-11.1,2.5475478405713994,10,False
+5,CnnPolicy,0.0003,0.95,128,1.0,0.02,0.25,-14.353632478632479,534.0662393162393,-6.3,5.330103188494572,10,False
+6,MlpPolicy,0.0003,0.99,64,1.0,0.05,0.2,-20.926715781310584,193.85769678169834,-21.0,0.0,10,False
+7,MlpPolicy,0.0005,0.99,64,1.0,0.05,0.2,-20.924271844660193,194.126213592233,-21.0,0.0,10,False
+8,MlpPolicy,0.0001,0.99,64,1.0,0.05,0.2,-20.925077639751553,194.09200310559007,-21.0,0.0,10,False
+9,MlpPolicy,0.0005,0.99,128,1.0,0.05,0.2,-20.926270857586342,193.98098564221962,-21.0,0.0,10,False
+10,MlpPolicy,0.0005,0.95,64,1.0,0.02,0.25,-20.92942537601234,192.79097570381796,-21.0,0.0,10,False
