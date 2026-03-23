@@ -16,7 +16,7 @@ gym.register_envs(ale_py)
 
 ENV_ID = "ALE/Pong-v5"
 SEED = 42
-TRAIN_TIMESTEPS = 50_000
+TRAIN_TIMESTEPS = 100_000
 EVAL_EPISODES = 10
 
 

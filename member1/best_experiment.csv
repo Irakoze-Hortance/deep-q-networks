@@ -1,2 +1,0 @@
-Experiment,Learning Rate,Gamma,Batch Size,Avg Train Reward,Avg Episode Length,Eval Mean Reward,Eval Std Reward,Eval Episodes
-1,0.001,0.95,32,0.0,505.54347826086956,0.0,0.0,10
