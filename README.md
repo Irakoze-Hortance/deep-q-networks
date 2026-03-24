@@ -133,7 +133,7 @@ Each group member independently ran 10 experiments varying the learning rate, ga
 | 6 | CnnPolicy | 0.0002 | 0.99 | 64 | 1.0 | 0.10 | 0.20 | 1.688194 | True |
 | 7 | CnnPolicy | 0.0001 | 0.98 | 128 | 1.0 | 0.10 | 0.20 | 2.118962 | False |
 | 8 | CnnPolicy | 0.0005 | 0.99 | 32 | 1.0 | 0.10 | 0.20 | 1.833030 | False |
-| 9 | CnnPolicy | 0.0001 | 0.95 | 32 | 1.0 | 0.10 | 0.20 | 0.979796 | False |
+| 9 | MlpPolicy | 0.0001 | 0.95 | 32 | 1.0 | 0.10 | 0.20 | 0.979796 | False |
 | 10 | CnnPolicy | 0.0001 | 0.99 | 32 | 1.0 | 0.10 | 0.20 | 0.900000 | False |
 
 ### Member 2: Idara Essien
